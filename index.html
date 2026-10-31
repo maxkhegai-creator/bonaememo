@@ -636,6 +636,11 @@ button.bell { border: 0; background: none; padding: 0; cursor: pointer; }
 .tab { height: 42px !important; }
 .tab svg, .tab .me.glyph, .tab .me.glyph svg { width: 22px !important; height: 22px !important; }
 .tab .me:not(.glyph) { width: 26px !important; height: 26px !important; }
+/* Sliding highlight under the active tab */
+.tabs { position: relative; }
+.tab { position: relative; z-index: 1; background: transparent !important; }
+.tab-pill { position: absolute; left: 0; top: 4px; bottom: 4px; width: 0; border-radius: 999px; background: color-mix(in srgb, var(--fg) 7%, transparent); transition: transform .32s cubic-bezier(.3,1.25,.4,1), width .32s; pointer-events: none; }
+@media (prefers-reduced-motion: reduce) { .tab-pill { transition: none; } }
 </style>
 
 <svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs><linearGradient id="fsheen" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".45"/><stop offset=".55" stop-color="#fff" stop-opacity="0"/></linearGradient></defs></svg>
@@ -702,6 +707,7 @@ button.bell { border: 0; background: none; padding: 0; cursor: pointer; }
 
 
   <nav class="tabs" aria-label="화면 이동">
+    <span class="tab-pill" id="tabPill" aria-hidden="true"></span>
     <button class="tab on" id="tabChat" aria-label="채팅" aria-current="page">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 12a8 8 0 0 1-11.6 7.1L4 20l1-4.2A8 8 0 1 1 20 12z"/></svg>
     </button>
@@ -1243,7 +1249,18 @@ circles.addEventListener('click', e => {
 });
 
 // Bottom tab bar: chat ↔ profile
+const TAB_ORDER = ['chat', 'folders', 'me'];
+let curTab = 'chat';
+function movePill(animate) {
+  const on = document.querySelector('.tab.on'), pill = $('tabPill');
+  if (!on || !pill || !on.offsetWidth) return;
+  pill.style.transition = animate ? '' : 'none';
+  pill.style.width = on.offsetWidth + 'px';
+  pill.style.transform = `translateX(${on.offsetLeft}px)`;
+}
 function showTab(tab) {
+  const dir = Math.sign(TAB_ORDER.indexOf(tab) - TAB_ORDER.indexOf(curTab));
+  const changed = tab !== curTab; curTab = tab;
   const isChat = tab === 'chat';
   document.querySelectorAll('.app > header, #chat, .composer').forEach(el => el.hidden = !isChat);
   $('selBar').hidden = !isChat || !S.msgs.find(x => x.id === selected);
@@ -1254,7 +1271,17 @@ function showTab(tab) {
     $(id).classList.toggle('on', t === tab); $(id).toggleAttribute('aria-current', t === tab);
   });
   if (isChat) chat.scrollTop = chat.scrollHeight; else renderProfile();
+  movePill(true);
+  if (changed && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    // Slide the new screen in from the side it lives on, like Instagram
+    const els = isChat ? [...document.querySelectorAll('.app > header, #chat, .dock .composer')] : [$(tab === 'me' ? 'profile' : 'folders')];
+    els.forEach(el => el.animate([{ transform: `translateX(${dir * 28}px)`, opacity: 0 }, { transform: 'none', opacity: 1 }], { duration: 260, easing: 'cubic-bezier(.2,.8,.2,1)' }));
+    const icon = document.querySelector('.tab.on svg, .tab.on .me');
+    if (icon) icon.animate([{ transform: 'scale(.82)' }, { transform: 'scale(1.06)' }, { transform: 'scale(1)' }], { duration: 300, easing: 'ease-out' });
+  }
 }
+window.addEventListener('resize', () => movePill(false));
+requestAnimationFrame(() => movePill(false));
 $('tabChat').addEventListener('click', () => showTab('chat'));
 $('calBtn').addEventListener('click', () => openCalendar());
 $('fCal').addEventListener('click', () => openCalendar());
