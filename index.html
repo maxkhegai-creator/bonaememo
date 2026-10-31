@@ -1109,7 +1109,7 @@ function renderChat() {
     if (d !== lastDay) { html += `<div class="day" data-day="${dayKey(m.t)}">${d}</div>`; lastDay = d; }
     if (m.kind === 'alert') {
       const left = m.at - Date.now();
-      html += `<div class="row in"><span class="in-av"><img src="icons/mascot2-192.png" alt=""></span><div class="msg in-msg"><span class="in-name">알림</span>
+      html += `<div class="row in"><span class="in-av"><img src="icons/mascot3-192.png" alt=""></span><div class="msg in-msg"><span class="in-name">알림</span>
         <button class="bubble in-bubble${selected === m.id ? ' sel' : ''}" data-id="${m.id}" data-jump="${m.ref}"><b>${esc(m.text)}</b><span>${fmtWhen(m.at)}${left > 6e4 ? ` · ${Math.round(left / 6e4) >= 60 ? Math.round(left / 36e5) + '시간' : Math.round(left / 6e4) + '분'} 남았어요` : ''}</span><small>원래 메모 보기 ›</small></button></div><span class="time">${fmtTime(m.t)}</span></div>`;
       continue;
     }
