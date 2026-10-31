@@ -625,6 +625,9 @@ button.bell { border: 0; background: none; padding: 0; cursor: pointer; }
 .tab .me.glyph { width: 27px; height: 27px; background: none !important; border: 0; box-shadow: none !important; color: var(--fg); border-radius: 0; overflow: visible; }
 .tab .me.glyph svg { width: 27px; height: 27px; stroke-width: 2.3; }
 .tab.on .me.glyph svg { fill: currentColor; }
+/* Keyboard open: drop the big title so the chat gets the room */
+.app.kb > header .title, .app.kb > header #calBtn { display: none !important; }
+.app.kb > header { padding-top: max(8px, env(safe-area-inset-top)) !important; row-gap: 0 !important; }
 </style>
 
 <svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs><linearGradient id="fsheen" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".45"/><stop offset=".55" stop-color="#fff" stop-opacity="0"/></linearGradient></defs></svg>
