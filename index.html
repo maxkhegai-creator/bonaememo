@@ -707,6 +707,8 @@ button.bell { border: 0; background: none; padding: 0; cursor: pointer; }
 .fcell .ring.fold-lg.on { transform: scale(1.1); }
 .circle.fold .fsvg, .fold-lg .fsvg { transition: none; }
 .circles .circle-wrap .circle.fold, .circles .circle-wrap .circle.fold.ready, .fcell .ring.fold-lg, .fcell .ring.fold-lg.on, .more-grid .ring.fold-lg, .more-grid .ring.fold-lg.on { background: none !important; box-shadow: none !important; border: 0 !important; }
+/* Composer: no glow when a folder is on, just a thin border in the folder color */
+.dock .composer.armed { box-shadow: var(--soft) !important; border: 1.5px solid var(--c) !important; }
 </style>
 
 <svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs><linearGradient id="fsheen" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".45"/><stop offset=".55" stop-color="#fff" stop-opacity="0"/></linearGradient></defs></svg>
