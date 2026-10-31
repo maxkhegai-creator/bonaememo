@@ -639,7 +639,7 @@ button.bell { border: 0; background: none; padding: 0; cursor: pointer; }
 /* Sliding highlight under the active tab */
 .tabs { position: relative; }
 .tab { position: relative; z-index: 1; background: transparent !important; }
-.tab-pill { position: absolute; left: 0; top: 4px; bottom: 4px; width: 0; border-radius: 999px; background: color-mix(in srgb, var(--fg) 7%, transparent); transition: transform .32s cubic-bezier(.3,1.25,.4,1), width .32s; pointer-events: none; }
+.tab-pill { position: absolute; left: 0; top: 4px; bottom: 4px; width: 0; border-radius: 999px; background: color-mix(in srgb, var(--fg) 7%, transparent); transition: transform .45s cubic-bezier(.22,1,.36,1), width .45s cubic-bezier(.22,1,.36,1); will-change: transform; pointer-events: none; }
 @media (prefers-reduced-motion: reduce) { .tab-pill { transition: none; } }
 </style>
 
@@ -1275,9 +1275,9 @@ function showTab(tab) {
   if (changed && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
     // Slide the new screen in from the side it lives on, like Instagram
     const els = isChat ? [...document.querySelectorAll('.app > header, #chat, .dock .composer')] : [$(tab === 'me' ? 'profile' : 'folders')];
-    els.forEach(el => el.animate([{ transform: `translateX(${dir * 28}px)`, opacity: 0 }, { transform: 'none', opacity: 1 }], { duration: 260, easing: 'cubic-bezier(.2,.8,.2,1)' }));
+    els.forEach(el => el.animate([{ transform: `translate3d(${dir * 36}px,0,0)`, opacity: 0.15 }, { transform: 'translate3d(0,0,0)', opacity: 1 }], { duration: 420, easing: 'cubic-bezier(.22,1,.36,1)' }));
     const icon = document.querySelector('.tab.on svg, .tab.on .me');
-    if (icon) icon.animate([{ transform: 'scale(.82)' }, { transform: 'scale(1.06)' }, { transform: 'scale(1)' }], { duration: 300, easing: 'ease-out' });
+    if (icon) icon.animate([{ transform: 'scale(.9)' }, { transform: 'scale(1)' }], { duration: 380, easing: 'cubic-bezier(.22,1,.36,1)' });
   }
 }
 window.addEventListener('resize', () => movePill(false));
