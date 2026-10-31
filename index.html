@@ -1494,6 +1494,14 @@ if (window.visualViewport) {
 // A swipe may only scroll an inner list that can still move in that direction.
 let touchY = 0;
 document.addEventListener('touchstart', e => { touchY = e.touches[0].clientY; }, { passive: true });
+
+// Like Instagram: swipe down on the chat while typing and the keyboard goes away
+let dismissY = null;
+chat.addEventListener('touchstart', e => { dismissY = appEl.classList.contains('kb') ? e.touches[0].clientY : null; }, { passive: true });
+chat.addEventListener('touchmove', e => {
+  if (dismissY === null) return;
+  if (e.touches[0].clientY - dismissY > 40) { dismissY = null; document.activeElement && document.activeElement.blur(); }
+}, { passive: true });
 document.addEventListener('touchmove', e => {
   if (e.touches.length > 1) return;
   const dy = e.touches[0].clientY - touchY; // > 0: finger moving down (content scrolls up)
