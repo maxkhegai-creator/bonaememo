@@ -639,8 +639,10 @@ button.bell { border: 0; background: none; padding: 0; cursor: pointer; }
 /* Sliding highlight under the active tab */
 .tabs { position: relative; }
 .tab { position: relative; z-index: 1; background: transparent !important; }
-.tab-pill { position: absolute; left: 0; top: 4px; bottom: 4px; width: 0; border-radius: 999px; background: color-mix(in srgb, var(--fg) 7%, transparent); transition: transform .45s cubic-bezier(.22,1,.36,1), width .45s cubic-bezier(.22,1,.36,1); will-change: transform; pointer-events: none; }
+.tab-pill { position: absolute; left: 0; top: 4px; bottom: 4px; width: 0; border-radius: 999px; background: color-mix(in srgb, var(--fg) 7%, transparent); transition: transform .42s cubic-bezier(.3,1.3,.45,1); transition: transform .5s linear(0, .009, .035 2.1%, .141 4.4%, .723 12.9%, .938 16.7%, 1.017 19.8%, 1.051 22.4%, 1.06 25.1%, 1.044 29.8%, 1.01 37%, .998 43.1%, .996 53.9%, 1); will-change: transform; pointer-events: none; }
 @media (prefers-reduced-motion: reduce) { .tab-pill { transition: none; } }
+.tabs { transition: transform .35s cubic-bezier(.3,1.3,.45,1); }
+.tabs.press { transform: scale(1.04); transition-duration: .18s; }
 </style>
 
 <svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs><linearGradient id="fsheen" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".45"/><stop offset=".55" stop-color="#fff" stop-opacity="0"/></linearGradient></defs></svg>
@@ -1272,15 +1274,12 @@ function showTab(tab) {
   });
   if (isChat) chat.scrollTop = chat.scrollHeight; else renderProfile();
   movePill(true);
-  if (changed && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
-    // Slide the new screen in from the side it lives on, like Instagram
-    const els = isChat ? [...document.querySelectorAll('.app > header, #chat, .dock .composer')] : [$(tab === 'me' ? 'profile' : 'folders')];
-    els.forEach(el => el.animate([{ transform: `translate3d(${dir * 36}px,0,0)`, opacity: 0.15 }, { transform: 'translate3d(0,0,0)', opacity: 1 }], { duration: 420, easing: 'cubic-bezier(.22,1,.36,1)' }));
-    const icon = document.querySelector('.tab.on svg, .tab.on .me');
-    if (icon) icon.animate([{ transform: 'scale(.9)' }, { transform: 'scale(1)' }], { duration: 380, easing: 'cubic-bezier(.22,1,.36,1)' });
-  }
 }
 window.addEventListener('resize', () => movePill(false));
+// Press feedback: the whole bar swells a little while a finger is on it (like Instagram)
+const tabsEl = document.querySelector('.tabs');
+tabsEl.addEventListener('pointerdown', () => tabsEl.classList.add('press'));
+['pointerup', 'pointercancel', 'pointerleave'].forEach(t => tabsEl.addEventListener(t, () => tabsEl.classList.remove('press')));
 requestAnimationFrame(() => movePill(false));
 $('tabChat').addEventListener('click', () => showTab('chat'));
 $('calBtn').addEventListener('click', () => openCalendar());
