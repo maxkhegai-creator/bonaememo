@@ -1521,7 +1521,7 @@ function openActions(f) {
       </div>
       <button type="button" class="btn act-close" data-close="1">닫기</button>
     </div>`;
-    if (mode === 'name') { const i = bg.querySelector('#actName'); i.focus(); i.select(); }
+    if (mode === 'name') { const i = bg.querySelector('#actName'); i.focus({ preventScroll: true }); i.select(); }
   };
   draw();
   $('app').appendChild(bg);
@@ -1565,7 +1565,7 @@ function openSheet(folderId) {
     <div class="acts">${f ? '<button type="button" class="btn warn" id="sheetDel">폴더 삭제</button>' : ''}<button type="button" class="btn" id="sheetCancel">취소</button><button class="btn primary">저장</button></div>
   </form>`;
   $('app').appendChild(bg);
-  const name = bg.querySelector('#folderName'); name.focus(); name.select();
+  const name = bg.querySelector('#folderName'); name.focus({ preventScroll: true }); name.select();
   const close = () => bg.remove();
   bg.addEventListener('click', e => { if (e.target === bg) close(); });
   bg.querySelector('#colors').addEventListener('click', e => {
@@ -1598,21 +1598,24 @@ function openSheet(folderId) {
 
 // Follow the on-screen keyboard: size the app to what is actually visible
 const appEl = $('app');
-function fitViewport() {
+function fitViewport(fromScroll) {
   const vv = window.visualViewport;
   if (!vv) return;
-  appEl.style.height = vv.height + 'px';
-  appEl.style.transform = `translateY(${vv.offsetTop}px)`;
+  // Only touch the layout when something actually changed (avoids a resize -> scroll -> resize loop on iOS)
+  const h = Math.round(vv.height) + 'px', tr = `translateY(${Math.round(vv.offsetTop)}px)`;
+  if (appEl.style.height !== h) appEl.style.height = h;
+  if (appEl.style.transform !== tr) appEl.style.transform = tr;
   // Remember the tallest viewport we've seen (no keyboard); anything much shorter means the keyboard is up.
   if (!fitViewport.base || Math.abs(window.innerWidth - fitViewport.w) > 50) { fitViewport.base = 0; fitViewport.w = window.innerWidth; }
   fitViewport.base = Math.max(fitViewport.base, vv.height);
-  const typing = document.activeElement && /^(TEXTAREA|INPUT)$/.test(document.activeElement.tagName);
+  // Compact layout only while typing in the chat box (not in sheets like "new folder")
+  const typing = document.activeElement === input;
   const touch = matchMedia('(pointer: coarse)').matches;
   appEl.classList.toggle('kb', typing && (touch || vv.height < fitViewport.base - 120));
-  window.scrollTo(0, 0);
+  if (!fromScroll && window.scrollY) window.scrollTo(0, 0);
 }
 let fitQueued = false;
-const fitSoon = () => { if (fitQueued) return; fitQueued = true; requestAnimationFrame(() => { fitQueued = false; fitViewport(); }); };
+const fitSoon = () => { if (fitQueued) return; fitQueued = true; requestAnimationFrame(() => { fitQueued = false; fitViewport(true); }); };
 if (window.visualViewport) {
   visualViewport.addEventListener('resize', () => { const atEnd = chat.scrollHeight - chat.scrollTop - chat.clientHeight < 40; fitViewport(); if (atEnd) chat.scrollTop = chat.scrollHeight; });
   visualViewport.addEventListener('scroll', fitSoon);
