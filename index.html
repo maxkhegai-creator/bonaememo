@@ -674,6 +674,8 @@ button.bell { border: 0; background: none; padding: 0; cursor: pointer; }
 .sr-meta { font-size: 12px; color: var(--muted); display: flex; align-items: center; gap: 6px; }
 .sr-meta i { width: 8px; height: 8px; border-radius: 2px; background: var(--c); }
 .sr-empty { text-align: center; color: var(--muted); font-size: 14px; line-height: 1.6; padding: 48px 12px; }
+.chip.chip-none { --c: #8e8e93; border-style: dashed; }
+.chip.chip-none.on { border-style: solid; }
 </style>
 
 <svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs><linearGradient id="fsheen" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".45"/><stop offset=".55" stop-color="#fff" stop-opacity="0"/></linearGradient></defs></svg>
@@ -1385,14 +1387,16 @@ function renderSelBar() {
   const m = S.msgs.find(x => x.id === selected);
   $('selBar').hidden = !m;
   if (!m) return;
-  $('selChips').innerHTML = S.folders.map(f => `<button class="chip${m.f === f.id ? ' on' : ''}" data-f="${f.id}" style="--c:${f.c}">${esc(f.name)}</button>`).join('');
+  $('selChips').innerHTML = `<button class="chip chip-none${m.f ? '' : ' on'}" data-f="">폴더 없음</button>` + S.folders.map(f => `<button class="chip${m.f === f.id ? ' on' : ''}" data-f="${f.id}" style="--c:${f.c}">${esc(f.name)}</button>`).join('');
 }
 $('selChips').addEventListener('click', e => {
   const b = e.target.closest('[data-f]'); const m = S.msgs.find(x => x.id === selected); if (!b || !m) return;
-  m.f = m.f === b.dataset.f ? null : b.dataset.f;
-  touch(m.f);
+  const had = m.f;
+  m.f = !b.dataset.f || m.f === b.dataset.f ? null : b.dataset.f;
+  if (!m.f && !had) { selected = null; renderChat(); return; }
+  if (m.f) touch(m.f);
   save(); selected = null; renderChat();
-  toast(m.f ? `'${folderOf(m.f).name}'에 저장했어요` : '폴더에서 뺐어요');
+  toast(m.f ? `'${folderOf(m.f).name}'에 저장했어요` : '일반 메모로 돌려놨어요');
 });
 $('bellBtn').addEventListener('click', () => {
   const text = input.value.trim();
