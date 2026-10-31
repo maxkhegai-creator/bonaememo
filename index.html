@@ -676,6 +676,17 @@ button.bell { border: 0; background: none; padding: 0; cursor: pointer; }
 .sr-empty { text-align: center; color: var(--muted); font-size: 14px; line-height: 1.6; padding: 48px 12px; }
 .chip.chip-none { --c: #8e8e93; border-style: dashed; }
 .chip.chip-none.on { border-style: solid; }
+/* Glass tab bar (Instagram style). The blur lives on its own layer underneath,
+   so the sliding highlight on top doesn't make the phone re-blur every frame. */
+.tabs { background: transparent !important; border: 1px solid rgba(255,255,255,.7) !important; box-shadow: 0 10px 30px rgba(17,20,23,.14), inset 0 1px 0 rgba(255,255,255,.85) !important; isolation: isolate; }
+.tabs::before { content: ""; position: absolute; inset: 0; border-radius: inherit; z-index: -1; background: rgba(255,255,255,.52); -webkit-backdrop-filter: blur(22px) saturate(190%); backdrop-filter: blur(22px) saturate(190%); transform: translateZ(0); }
+.tab-pill { background: rgba(17,20,23,.07); box-shadow: inset 0 1px 0 rgba(255,255,255,.6); }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .tabs { border-color: rgba(255,255,255,.12) !important; box-shadow: 0 10px 30px rgba(0,0,0,.4), inset 0 1px 0 rgba(255,255,255,.08) !important; }
+  :root:not([data-theme="light"]) .tabs::before { background: rgba(30,31,36,.55); }
+  :root:not([data-theme="light"]) .tab-pill { background: rgba(255,255,255,.12); box-shadow: none; } }
+:root[data-theme="dark"] .tabs { border-color: rgba(255,255,255,.12) !important; box-shadow: 0 10px 30px rgba(0,0,0,.4), inset 0 1px 0 rgba(255,255,255,.08) !important; }
+:root[data-theme="dark"] .tabs::before { background: rgba(30,31,36,.55); }
+:root[data-theme="dark"] .tab-pill { background: rgba(255,255,255,.12); box-shadow: none; }
 </style>
 
 <svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs><linearGradient id="fsheen" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".45"/><stop offset=".55" stop-color="#fff" stop-opacity="0"/></linearGradient></defs></svg>
