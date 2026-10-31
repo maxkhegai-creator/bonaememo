@@ -1474,7 +1474,12 @@ function fitViewport() {
   if (!vv) return;
   appEl.style.height = vv.height + 'px';
   appEl.style.transform = `translateY(${vv.offsetTop}px)`;
-  appEl.classList.toggle('kb', vv.height < window.innerHeight - 120);
+  // Remember the tallest viewport we've seen (no keyboard); anything much shorter means the keyboard is up.
+  if (!fitViewport.base || Math.abs(window.innerWidth - fitViewport.w) > 50) { fitViewport.base = 0; fitViewport.w = window.innerWidth; }
+  fitViewport.base = Math.max(fitViewport.base, vv.height);
+  const typing = document.activeElement && /^(TEXTAREA|INPUT)$/.test(document.activeElement.tagName);
+  appEl.classList.toggle('kb', typing && vv.height < fitViewport.base - 120);
+  window.scrollTo(0, 0);
 }
 let fitQueued = false;
 const fitSoon = () => { if (fitQueued) return; fitQueued = true; requestAnimationFrame(() => { fitQueued = false; fitViewport(); }); };
@@ -1502,6 +1507,7 @@ document.addEventListener('touchmove', e => {
   e.preventDefault();
 }, { passive: false });
 input.addEventListener('focus', () => setTimeout(() => { fitViewport(); chat.scrollTop = chat.scrollHeight; }, 300));
+input.addEventListener('blur', () => setTimeout(fitViewport, 100));
 fitViewport();
 
 // Keep the chat padded by the floating header and dock
