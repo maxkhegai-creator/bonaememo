@@ -630,6 +630,7 @@ button.bell { border: 0; background: none; padding: 0; cursor: pointer; }
 .app.kb > header { padding-top: max(8px, env(safe-area-inset-top)) !important; row-gap: 0 !important; }
 #chat, .sheet, .sheet-bg, #pList, #pfBody, #fBody, main { overscroll-behavior: contain; }
 .app { touch-action: manipulation; }
+.app.kb .dock { padding-bottom: 6px; }
 </style>
 
 <svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs><linearGradient id="fsheen" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".45"/><stop offset=".55" stop-color="#fff" stop-opacity="0"/></linearGradient></defs></svg>
@@ -1478,7 +1479,8 @@ function fitViewport() {
   if (!fitViewport.base || Math.abs(window.innerWidth - fitViewport.w) > 50) { fitViewport.base = 0; fitViewport.w = window.innerWidth; }
   fitViewport.base = Math.max(fitViewport.base, vv.height);
   const typing = document.activeElement && /^(TEXTAREA|INPUT)$/.test(document.activeElement.tagName);
-  appEl.classList.toggle('kb', typing && vv.height < fitViewport.base - 120);
+  const touch = matchMedia('(pointer: coarse)').matches;
+  appEl.classList.toggle('kb', typing && (touch || vv.height < fitViewport.base - 120));
   window.scrollTo(0, 0);
 }
 let fitQueued = false;
@@ -1507,7 +1509,8 @@ document.addEventListener('touchmove', e => {
   e.preventDefault();
 }, { passive: false });
 input.addEventListener('focus', () => setTimeout(() => { fitViewport(); chat.scrollTop = chat.scrollHeight; }, 300));
-input.addEventListener('blur', () => setTimeout(fitViewport, 100));
+document.addEventListener('focusin', () => { fitViewport(); setTimeout(fitViewport, 350); });
+document.addEventListener('focusout', () => setTimeout(fitViewport, 100));
 fitViewport();
 
 // Keep the chat padded by the floating header and dock
