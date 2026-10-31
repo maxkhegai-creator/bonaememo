@@ -1259,7 +1259,12 @@ let curTab = 'chat';
 function movePill(animate, target) {
   const on = target || document.querySelector('.tab.on'), pill = $('tabPill');
   if (!on || !pill || !on.offsetWidth) return;
-  pill.style.transition = animate ? '' : 'none';
+  // One step (side to middle) 0.65s, two steps (end to end) 0.9s
+  const idx = [...on.parentElement.querySelectorAll('.tab')].indexOf(on);
+  const from = pill.dataset.idx === undefined ? idx : +pill.dataset.idx;
+  if (!animate) pill.style.transition = 'none';
+  else if (idx !== from) { pill.style.transition = ''; pill.style.transitionDuration = Math.abs(idx - from) >= 2 ? '.9s' : '.65s'; }
+  pill.dataset.idx = idx;
   pill.style.width = on.offsetWidth + 'px';
   pill.style.transform = `translateX(${on.offsetLeft}px)`;
 }
