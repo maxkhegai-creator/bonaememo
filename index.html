@@ -639,10 +639,13 @@ button.bell { border: 0; background: none; padding: 0; cursor: pointer; }
 /* Sliding highlight under the active tab */
 .tabs { position: relative; }
 .tab { position: relative; z-index: 1; background: transparent !important; }
-.tab-pill { position: absolute; left: 0; top: 4px; bottom: 4px; width: 0; border-radius: 999px; background: color-mix(in srgb, var(--fg) 7%, transparent); transition: transform .42s cubic-bezier(.3,1.3,.45,1); transition: transform .5s linear(0, .009, .035 2.1%, .141 4.4%, .723 12.9%, .938 16.7%, 1.017 19.8%, 1.051 22.4%, 1.06 25.1%, 1.044 29.8%, 1.01 37%, .998 43.1%, .996 53.9%, 1); will-change: transform; pointer-events: none; }
+.tab-pill { position: absolute; left: 0; top: 4px; bottom: 4px; width: 0; border-radius: 999px; background: color-mix(in srgb, var(--fg) 7%, transparent); transition: transform .55s cubic-bezier(.25,1.15,.4,1); transition: transform .6s linear(0, .006, .025 2.8%, .101 6.1%, .539 18.9%, .721 25.3%, .849 31.5%, .937 38.1%, .968 41.8%, .991 45.7%, 1.006 50.1%, 1.015 55%, 1.017 63.9%, 1.001 85.9%, 1); will-change: transform; transform: translateZ(0); pointer-events: none; }
 @media (prefers-reduced-motion: reduce) { .tab-pill { transition: none; } }
 .tabs { transition: transform .35s cubic-bezier(.3,1.3,.45,1); }
 .tabs.press { transform: scale(1.04); transition-duration: .18s; }
+/* The bar is solid (no live blur) so the sliding highlight stays at 60fps on iPhone */
+.tabs { -webkit-backdrop-filter: none !important; backdrop-filter: none !important; background: var(--card, #fff) !important; will-change: transform; }
+.tabs.press { transform: scale(1.03); }
 </style>
 
 <svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs><linearGradient id="fsheen" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".45"/><stop offset=".55" stop-color="#fff" stop-opacity="0"/></linearGradient></defs></svg>
@@ -1253,8 +1256,8 @@ circles.addEventListener('click', e => {
 // Bottom tab bar: chat ↔ profile
 const TAB_ORDER = ['chat', 'folders', 'me'];
 let curTab = 'chat';
-function movePill(animate) {
-  const on = document.querySelector('.tab.on'), pill = $('tabPill');
+function movePill(animate, target) {
+  const on = target || document.querySelector('.tab.on'), pill = $('tabPill');
   if (!on || !pill || !on.offsetWidth) return;
   pill.style.transition = animate ? '' : 'none';
   pill.style.width = on.offsetWidth + 'px';
@@ -1275,13 +1278,20 @@ function showTab(tab) {
   if (isChat) chat.scrollTop = chat.scrollHeight; else renderProfile();
   movePill(true);
 }
+// Tab taps: start the slide first, swap the screen two frames later so the slide never stutters
+function goTab(t, btn) {
+  if (t === curTab && !$('panel').classList.contains('open')) return;
+  document.querySelectorAll('.tab').forEach(b => b.classList.toggle('on', b === btn));
+  movePill(true, btn);
+  requestAnimationFrame(() => requestAnimationFrame(() => showTab(t)));
+}
 window.addEventListener('resize', () => movePill(false));
 // Press feedback: the whole bar swells a little while a finger is on it (like Instagram)
 const tabsEl = document.querySelector('.tabs');
 tabsEl.addEventListener('pointerdown', () => tabsEl.classList.add('press'));
 ['pointerup', 'pointercancel', 'pointerleave'].forEach(t => tabsEl.addEventListener(t, () => tabsEl.classList.remove('press')));
 requestAnimationFrame(() => movePill(false));
-$('tabChat').addEventListener('click', () => showTab('chat'));
+$('tabChat').addEventListener('click', () => goTab('chat', $('tabChat')));
 $('calBtn').addEventListener('click', () => openCalendar());
 $('fCal').addEventListener('click', () => openCalendar());
 $('pCal').addEventListener('click', () => openCalendar({ only: openFolder, onPick: jumpInFolder }));
@@ -1294,8 +1304,8 @@ function jumpInFolder(k) {
   setTimeout(() => list.querySelectorAll('.flash').forEach(x => x.classList.remove('flash')), 1800);
 }
 document.querySelectorAll('.calnum').forEach(el => el.textContent = new Date().getDate());
-$('tabFolders').addEventListener('click', () => showTab('folders'));
-$('tabMe').addEventListener('click', () => showTab('me'));
+$('tabFolders').addEventListener('click', () => goTab('folders', $('tabFolders')));
+$('tabMe').addEventListener('click', () => goTab('me', $('tabMe')));
 $('fAdd').addEventListener('click', () => openSheet(null));
 $('pfEdit').addEventListener('click', openProfileSheet);
 $('fBody').addEventListener('click', e => {
