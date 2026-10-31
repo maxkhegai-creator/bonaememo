@@ -679,14 +679,17 @@ button.bell { border: 0; background: none; padding: 0; cursor: pointer; }
 /* Glass tab bar (Instagram style). The blur lives on its own layer underneath,
    so the sliding highlight on top doesn't make the phone re-blur every frame. */
 .tabs { background: transparent !important; border: 1px solid rgba(255,255,255,.7) !important; box-shadow: 0 10px 30px rgba(17,20,23,.14), inset 0 1px 0 rgba(255,255,255,.85) !important; isolation: isolate; }
-.tabs::before { content: ""; position: absolute; inset: 0; border-radius: inherit; z-index: -1; background: rgba(255,255,255,.28); -webkit-backdrop-filter: blur(14px) saturate(190%); backdrop-filter: blur(14px) saturate(190%); transform: translateZ(0); }
+.tabs::before { content: ""; position: absolute; inset: 0; border-radius: inherit; z-index: -1; background: rgba(255,255,255,.12); -webkit-backdrop-filter: blur(10px) saturate(200%); backdrop-filter: blur(10px) saturate(200%); transform: translateZ(0); }
 .tab-pill { background: rgba(17,20,23,.07); box-shadow: inset 0 1px 0 rgba(255,255,255,.6); }
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .tabs { border-color: rgba(255,255,255,.12) !important; box-shadow: 0 10px 30px rgba(0,0,0,.4), inset 0 1px 0 rgba(255,255,255,.08) !important; }
-  :root:not([data-theme="light"]) .tabs::before { background: rgba(30,31,36,.32); }
+  :root:not([data-theme="light"]) .tabs::before { background: rgba(30,31,36,.16); }
   :root:not([data-theme="light"]) .tab-pill { background: rgba(255,255,255,.12); box-shadow: none; } }
 :root[data-theme="dark"] .tabs { border-color: rgba(255,255,255,.12) !important; box-shadow: 0 10px 30px rgba(0,0,0,.4), inset 0 1px 0 rgba(255,255,255,.08) !important; }
-:root[data-theme="dark"] .tabs::before { background: rgba(30,31,36,.32); }
+:root[data-theme="dark"] .tabs::before { background: rgba(30,31,36,.16); }
 :root[data-theme="dark"] .tab-pill { background: rgba(255,255,255,.12); box-shadow: none; }
+.in-av { margin-top: 19px !important; background: #fff !important; overflow: hidden; border: 1px solid var(--card-line); width: 38px !important; height: 38px !important; }
+.in-av img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.in-name { line-height: 16px; display: block; }
 </style>
 
 <svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs><linearGradient id="fsheen" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".45"/><stop offset=".55" stop-color="#fff" stop-opacity="0"/></linearGradient></defs></svg>
@@ -1106,7 +1109,7 @@ function renderChat() {
     if (d !== lastDay) { html += `<div class="day" data-day="${dayKey(m.t)}">${d}</div>`; lastDay = d; }
     if (m.kind === 'alert') {
       const left = m.at - Date.now();
-      html += `<div class="row in"><span class="in-av">${BELL_SVG}</span><div class="msg in-msg"><span class="in-name">알림</span>
+      html += `<div class="row in"><span class="in-av"><img src="icons/mascot-192.png" alt=""></span><div class="msg in-msg"><span class="in-name">알림</span>
         <button class="bubble in-bubble${selected === m.id ? ' sel' : ''}" data-id="${m.id}" data-jump="${m.ref}"><b>${esc(m.text)}</b><span>${fmtWhen(m.at)}${left > 6e4 ? ` · ${Math.round(left / 6e4) >= 60 ? Math.round(left / 36e5) + '시간' : Math.round(left / 6e4) + '분'} 남았어요` : ''}</span><small>원래 메모 보기 ›</small></button></div><span class="time">${fmtTime(m.t)}</span></div>`;
       continue;
     }
