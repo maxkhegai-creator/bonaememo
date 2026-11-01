@@ -709,6 +709,9 @@ button.bell { border: 0; background: none; padding: 0; cursor: pointer; }
 .circles .circle-wrap .circle.fold, .circles .circle-wrap .circle.fold.ready, .fcell .ring.fold-lg, .fcell .ring.fold-lg.on, .more-grid .ring.fold-lg, .more-grid .ring.fold-lg.on { background: none !important; box-shadow: none !important; border: 0 !important; }
 /* Composer: no glow when a folder is on, just a thin border in the folder color */
 .dock .composer.armed { box-shadow: var(--soft) !important; border: 1px solid color-mix(in srgb, var(--c) 30%, transparent) !important; }
+/* Pin badge v2: soft white badge with a light gray pin */
+.circles .pinbadge { top: -6px; right: -6px; width: 19px; height: 19px; border: 0; border-radius: 50%; background: #fff; color: #b3b8be; box-shadow: 0 1px 4px rgba(0, 0, 0, .18); }
+.circles .pinbadge svg { width: 11px; height: 11px; fill: currentColor; stroke: none; transform: rotate(35deg); }
 /* Photo viewer */
 .viewer { position: absolute; inset: 0; z-index: 45; background: #000; color: #fff; display: flex; flex-direction: column; touch-action: none; }
 .viewer[hidden] { display: none !important; }
@@ -1136,7 +1139,7 @@ function renderCircles() {
   const more = S.folders.length > ROW;
   $('circles').innerHTML = rowFolders().map(f => {
     const n = S.msgs.filter(m => m.f === f.id).length;
-    return `<div class="circle-wrap"><button class="circle fold${S.active === f.id ? ' ready' : ''}" aria-pressed="${S.active === f.id}" data-f="${f.id}" style="--c:${f.c}" aria-label="${esc(f.name)}${f.pin ? ' (고정)' : ''}">${folderSVG(S.active === f.id, n)}${f.pin ? `<span class="pinbadge">${PIN_SVG}</span>` : ''}</button><span class="circle-hint${S.active === f.id ? ' on' : ''}">${esc(f.name)}</span></div>`;
+    return `<div class="circle-wrap"><button class="circle fold${S.active === f.id ? ' ready' : ''}" aria-pressed="${S.active === f.id}" data-f="${f.id}" style="--c:${f.c}" aria-label="${esc(f.name)}${f.pin ? ' (고정)' : ''}">${folderSVG(S.active === f.id, n)}${f.pin ? `<span class="pinbadge">${PIN_FILL}</span>` : ''}</button><span class="circle-hint${S.active === f.id ? ' on' : ''}">${esc(f.name)}</span></div>`;
   }).join('') + (more
     ? `<div class="circle-wrap"><button class="circle empty more" data-more="1" aria-label="전체 폴더 보기">···</button><span class="circle-hint">더보기 ${S.folders.length}</span></div>`
     : `<div class="circle-wrap"><button class="circle empty" data-add="1" aria-label="폴더 추가">+</button><span class="circle-hint">폴더 추가</span></div>`);
@@ -1558,6 +1561,7 @@ function openMore() {
     toast(`'${folderOf(S.active).name}' 켜짐 · 보내는 메모가 여기에 저장돼요`);
   });
 }
+const PIN_FILL = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M16 9V4h1a1 1 0 0 0 0-2H7a1 1 0 0 0 0 2h1v5a3 3 0 0 1-3 3v2h5.97v7l1 1 1-1v-7H19v-2a3 3 0 0 1-3-3z"/></svg>';
 const PIN_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 3h6l-1 6 4 4H6l4-4z"/><path d="M12 13v8"/></svg>';
 
 // Long-press menu for a circle: pin, color, rename, open, delete
