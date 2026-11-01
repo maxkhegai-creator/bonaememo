@@ -1260,7 +1260,7 @@ function renderPanel() {
     : `<div class="empty-state">아직 이 폴더에 메모가 없어요.<br>위에서 이 동그라미를 켜고 메모를 보내보세요.</div>`;
 }
 
-function clearExample() { if (S.example) S = { folders: S.folders, msgs: [], example: false, active: S.active }; }
+function clearExample() { if (S.example) S = { ...S, msgs: [], example: false }; }
 
 function post(folderId) {
   const text = input.value.trim();
@@ -1289,12 +1289,49 @@ function shrink(file, max = 1080) {
       const c = document.createElement('canvas');
       c.width = Math.round(img.width * k); c.height = Math.round(img.height * k);
       c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
-      URL.revokeObjectURL(url); resolve(c.toDataURL('image/jpeg', 0.8));
+      URL.revokeObjectURL(url); resolve(c.toDataURL('image/jpeg', 0.82));
     };
     img.onerror = () => { URL.revokeObjectURL(url); reject(); };
     img.src = url;
   });
 }
+// ---- High-quality photo store (IndexedDB: much bigger than localStorage) ----
+// The chat keeps a light preview in m.img; the full-size photo lives here, keyed by message id.
+const PhotoDB = (() => {
+  let dbp = null;
+  const open = () => dbp || (dbp = new Promise((res, rej) => {
+    try { const r = indexedDB.open('bonaememo-photos', 1);
+      r.onupgradeneeded = () => r.result.createObjectStore('full');
+      r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error);
+    } catch (e) { rej(e); }
+  }));
+  const tx = (mode, fn) => open().then(db => new Promise((res, rej) => {
+    const t = db.transaction('full', mode), st = t.objectStore('full'); const r = fn(st);
+    t.oncomplete = () => res(r && r.result); t.onerror = () => rej(t.error);
+  }));
+  return {
+    put: (id, blob) => tx('readwrite', st => st.put(blob, id)),
+    get: id => tx('readonly', st => st.get(id)).catch(() => null),
+    del: id => tx('readwrite', st => st.delete(id)).catch(() => {}),
+  };
+})();
+try { navigator.storage && navigator.storage.persist && navigator.storage.persist(); } catch {}
+function shrinkBlob(file, max, q) {
+  return new Promise((resolve, reject) => {
+    const url = URL.createObjectURL(file), img = new Image();
+    img.onload = () => {
+      const k = Math.min(1, max / Math.max(img.width, img.height));
+      const c = document.createElement('canvas');
+      c.width = Math.round(img.width * k); c.height = Math.round(img.height * k);
+      const x = c.getContext('2d'); x.imageSmoothingQuality = 'high'; x.drawImage(img, 0, 0, c.width, c.height);
+      URL.revokeObjectURL(url);
+      c.toBlob(b => b ? resolve(b) : reject(), 'image/jpeg', q);
+    };
+    img.onerror = () => { URL.revokeObjectURL(url); reject(); };
+    img.src = url;
+  });
+}
+
 async function addPhotos(files) {
   if (!files.length) return;
   clearExample();
@@ -1302,8 +1339,11 @@ async function addPhotos(files) {
   let n = 0;
   for (const file of files) {
     try {
-      const img = await shrink(file);
-      S.msgs.push({ id: Date.now() + n, img, text: n === 0 ? caption : '', t: Date.now(), f: S.active || null });
+      const id = Date.now() + n;
+      const img = await shrink(file, 560); // light preview for the chat
+      let hq = false;
+      try { await PhotoDB.put(id, await shrinkBlob(file, 2560, 0.92)); hq = true; } catch {}
+      S.msgs.push({ id, img, hq, text: n === 0 ? caption : '', t: Date.now(), f: S.active || null });
       n++;
     } catch { toast('이 사진은 열 수 없어요. 다른 사진을 골라주세요'); }
   }
@@ -1462,7 +1502,7 @@ $('bellBtn').addEventListener('click', () => {
 });
 $('remMsg').addEventListener('click', () => { const m = S.msgs.find(x => x.id === selected); if (m) openRemind(m); });
 $('cancelSel').addEventListener('click', () => { selected = null; renderChat(); });
-$('delMsg').addEventListener('click', () => { S.msgs = S.msgs.filter(m => m.id !== selected); selected = null; save(); renderChat(); toast('삭제했어요'); });
+$('delMsg').addEventListener('click', () => { PhotoDB.del(selected); S.msgs = S.msgs.filter(m => m.id !== selected); selected = null; save(); renderChat(); toast('삭제했어요'); });
 
 // "더보기": every folder. Tap = turn on, long press = move into the chat row, pin button = pin/unpin.
 function openMore() {
@@ -1754,6 +1794,11 @@ function showViewer(dir) {
   vwZoom = 1; const img = $('vwImg');
   img.style.transition = 'none'; img.style.transform = dir ? `translateX(${dir * 40}px)` : 'scale(.96)'; img.style.opacity = '0';
   img.src = m.img;
+  if (m.hq) PhotoDB.get(m.id).then(b => {
+    if (!b || vwList[vwIdx] !== m || $('viewer').hidden) return;
+    const u = URL.createObjectURL(b); const prev = img.dataset.blob; img.src = u; img.dataset.blob = u;
+    if (prev) URL.revokeObjectURL(prev);
+  });
   requestAnimationFrame(() => { img.style.transition = ''; img.style.transform = 'none'; img.style.opacity = '1'; });
   $('vwCount').textContent = vwList.length > 1 ? `${vwIdx + 1} / ${vwList.length}` : '';
   $('vwText').textContent = m.text || '';
