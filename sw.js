@@ -1,5 +1,5 @@
 // 보내메모 service worker: caches the app shell so it opens offline.
-const CACHE = 'bonaememo-v28';
+const CACHE = 'bonaememo-v29';
 const SHELL = ['./', 'index.html', 'manifest.webmanifest', 'icons/icon-180.png', 'icons/icon-192.png', 'icons/icon-512.png'];
 
 self.addEventListener('install', e => {
