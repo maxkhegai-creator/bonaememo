@@ -1,0 +1,25 @@
+{
+  "appId": "com.maxkhegai.bonaememo",
+  "appName": "보내메모",
+  "webDir": "www",
+  "ios": {
+    "contentInset": "never",
+    "scrollEnabled": false,
+    "backgroundColor": "#fafafb"
+  },
+  "plugins": {
+    "Keyboard": {
+      "resize": "native",
+      "style": "light",
+      "resizeOnFullScreen": false
+    },
+    "SplashScreen": {
+      "launchShowDuration": 600,
+      "backgroundColor": "#fafafb",
+      "showSpinner": false
+    },
+    "LocalNotifications": {
+      "iconColor": "#7bb8ff"
+    }
+  }
+}

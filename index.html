@@ -849,6 +849,10 @@ button.bell { border: 0; background: none; padding: 0; cursor: pointer; }
 </div>
 
 <script>
+// Running inside the App Store app (Capacitor)? Native plugins are exposed on window.Capacitor.Plugins.
+const CAP = window.Capacitor, NATIVE = !!(CAP && CAP.isNativePlatform && CAP.isNativePlatform());
+const NP = NATIVE ? (CAP.Plugins || {}) : {};
+if (NATIVE) document.documentElement.classList.add('native');
 const KEY = 'memo-chat-v2';
 // macOS Finder tag colors: red, orange, yellow, green, blue, purple, gray
 const COLORS = ['#ff8c8c', '#ffb074', '#ffd36e', '#6fd3a8', '#7bb8ff', '#a99cff', '#ff9ec7'];
@@ -886,7 +890,7 @@ const TO_TAG = ['#fdee00', '#00c46a', '#ff0800', '#8b5cff', '#00b9e8', '#ff91af'
 S.folders.forEach(f => { const i = Math.max(OLD.indexOf(f.c), PASTEL.indexOf(f.c), MUTED.indexOf(f.c)); if (i >= 0) f.c = TO_TAG[i]; });
 S.folders.forEach(f => { if (f.c === '#ffc400') f.c = '#fdee00'; const i = VIVID.indexOf(f.c); if (i >= 0) f.c = COLORS[i]; });
 S.folders.forEach(f => { const i = TAG_OLD.indexOf(f.c); if (i >= 0) f.c = COLORS[i]; });
-const save = () => { try { localStorage.setItem(KEY, JSON.stringify(S)); return true; } catch { return false; } };
+const save = () => { try { localStorage.setItem(KEY, JSON.stringify(S)); if (NATIVE) queueNativeSync(); return true; } catch { return false; } };
 
 const $ = id => document.getElementById(id);
 const chat = $('chat'), input = $('input'), send = $('send');
@@ -1851,8 +1855,32 @@ document.addEventListener('click', e => {
 
 renderChat();
 
-// Offline support: register the service worker when served over https
-if ('serviceWorker' in navigator && location.protocol !== 'file:') {
+// ---- App Store app: native keyboard + phone notifications ----
+let nativeSyncT = 0;
+function queueNativeSync() { clearTimeout(nativeSyncT); nativeSyncT = setTimeout(syncNativeReminders, 400); }
+const notifId = m => Number(m.id % 2147483647);
+async function syncNativeReminders() {
+  const LN = NP.LocalNotifications; if (!LN) return;
+  try {
+    const want = S.msgs.filter(m => m.remind && !m.fired && m.remind > Date.now()).sort((a, b) => a.remind - b.remind).slice(0, 60);
+    const { notifications: pending = [] } = await LN.getPending();
+    if (pending.length) await LN.cancel({ notifications: pending.map(n => ({ id: n.id })) });
+    if (!want.length) return;
+    let { display } = await LN.checkPermissions();
+    if (display !== 'granted') ({ display } = await LN.requestPermissions());
+    if (display !== 'granted') return;
+    await LN.schedule({ notifications: want.map(m => ({ id: notifId(m), title: '보내메모', body: m.text || '사진 메모', schedule: { at: new Date(m.remind), allowWhileIdle: true }, extra: { ref: m.id } })) });
+  } catch {}
+}
+if (NATIVE) {
+  try { NP.Keyboard && NP.Keyboard.setAccessoryBarVisible({ isVisible: false }); } catch {}
+  try { NP.LocalNotifications && NP.LocalNotifications.addListener('localNotificationActionPerformed', () => { checkReminders(); showTab('chat'); chat.scrollTop = chat.scrollHeight; }); } catch {}
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) checkReminders(); });
+  syncNativeReminders();
+}
+
+// Offline support: register the service worker when served over https (not needed inside the App Store app)
+if (!NATIVE && 'serviceWorker' in navigator && location.protocol !== 'file:') {
   navigator.serviceWorker.register('sw.js').catch(() => {});
 }
 </script>
